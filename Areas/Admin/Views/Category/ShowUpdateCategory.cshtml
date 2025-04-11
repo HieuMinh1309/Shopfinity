@@ -1,0 +1,41 @@
+﻿@model SSE_Project.Models.ProductCategory
+
+
+@{
+    ViewData["Title"] = "Update Category";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h2>Update Category</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<form action="UpdateCategory" method="post">
+
+    <input type="hidden" name="Id" value="@Model?.Id" />
+
+
+    <div class="mb-3">
+        <label asp-for="CateName" class="form-label">Category Name</label>
+        <input asp-for="CateName" name="CateName" class="form-control" required>
+        <span asp-validation-for="CateName" class="text-danger"></span>
+    </div>
+    <div class="d-flex align-items-center gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a href="/Admin/Category/ShowListCategories" class="btn btn-secondary">Back to list</a>
+    </div>
+    
+</form>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

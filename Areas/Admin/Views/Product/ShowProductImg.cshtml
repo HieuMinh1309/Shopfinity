@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "ShowProductImg";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    var images = ViewBag.ProductImages as IEnumerable<SSE_Project.Models.ProductImg>;
+}
+
+<h1>Danh sách hình ảnh cho sản phẩm @ViewBag.ProductId</h1>
+
+@if (images != null && images.Any())
+{
+    <div class="image-gallery">
+        @foreach (var img in images)
+        {
+            <div class="image-item">
+                <img src="@img.ImgUrl" alt="Product Image" style="width: 200px; height: auto; margin: 10px; border: 1px solid #ddd;" />
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p>There are no images for this product.</p>
+}

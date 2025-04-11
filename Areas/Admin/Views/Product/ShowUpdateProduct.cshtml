@@ -1,0 +1,183 @@
+﻿@model SSE_Project.Models.Product
+
+@{
+    ViewData["Title"] = "Update Product";
+    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    var images = ViewBag.AdditionalImages as IEnumerable<SSE_Project.Models.ProductImg>;
+}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script src="https://cdn.ckeditor.com/4.18.0/standard/ckeditor.js"></script>
+
+<h2>Update Product</h2>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<form asp-area="Admin" asp-controller="Product" asp-action="UpdateProduct" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="Id" value="@Model.Id" />
+
+    <!-- Product Name -->
+    <div class="mb-3">
+        <label class="form-label">Product Name:</label>
+        <input asp-for="ProductName" name="ProductName" class="form-control" required>
+    </div>
+
+    <!-- Category -->
+    <div class="mb-3">
+        <label class="form-label">Category:</label>
+        <select asp-for="CateId" name="CateId" class="form-control" required>
+            <option value="">-- Select Category --</option>
+            @foreach (var category in ViewBag.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.CateId == category.Id)">@category.CateName</option>
+            }
+        </select>
+    </div>
+
+    <!-- Brand -->
+    <div class="mb-3">
+        <label class="form-label">Brand:</label>
+        <select asp-for="BrandId" name="BrandId" class="form-control" required>
+            <option value="">-- Select Brand --</option>
+            @foreach (var brand in ViewBag.Brands)
+            {
+                <option value="@brand.Id" selected="@(Model.BrandId == brand.Id)">@brand.Name</option>
+            }
+        </select>
+    </div>
+
+    <!-- Price -->
+    <div class="mb-3">
+        <label class="form-label">Price ($):</label>
+        <input asp-for="Price" name="Price" class="form-control" type="number" step="0.01" required>
+    </div>
+
+    <!-- Unit -->
+    <div class="mb-3">
+        <label class="form-label">Unit:</label>
+        <select asp-for="UnitId" name="UnitId" class="form-control" required>
+            <option value="">-- Select Unit --</option>
+            @foreach (var unit in ViewBag.Units)
+            {
+                <option value="@unit.Id" selected="@(Model.UnitId == unit.Id)">@unit.Name</option>
+            }
+        </select>
+    </div>
+
+    <!-- Status -->
+    <div class="mb-3">
+        <label class="form-label">Status:</label>
+        <select asp-for="Status" name="Status" class="form-control">
+            <option value="Available" selected="@(Model.Status == "Available")">Available</option>
+            <option value="Out of Stock" selected="@(Model.Status == "Out of Stock")">Out of Stock</option>
+        </select>
+    </div>
+
+    <!-- Warranty -->
+    <div class="mb-3">
+        <label class="form-label">Warranty Period (Months):</label>
+        <input asp-for="WarrantyPeriod" name="WarrantyPeriod" class="form-control" type="number" min="0">
+    </div>
+
+    <!-- Description -->
+    <div class="mb-3">
+        <label class="form-label">Description:</label>
+        <textarea id="Description" name="Description" class="form-control">@Html.Raw(Model.Description)</textarea>
+    </div>
+
+
+    <!-- Main Image Upload -->
+    <div class="mb-3">
+        <label class="form-label">Main Product Image:</label>
+        <input type="file" name="MainImage" class="form-control" accept="image/*">
+        @if (!string.IsNullOrEmpty(Model.Img))
+        {
+            <img src="@Model.Img" alt="Product Image" width="100" height="100" style="object-fit: cover;">
+        }
+    </div>
+
+    <!-- Additional Images Upload -->
+    <div class="mb-3">
+        <label class="form-label">Additional Product Images:</label>
+        <input type="file" name="AdditionalImages" class="form-control" accept="image/*" multiple>
+        @if (ViewBag.AdditionalImages != null)
+        {
+            <div class="mt-2">
+                @foreach (var img in images)
+                {
+                    <img src="@img.ImgUrl" alt="Additional Image" width="100" height="100" style="object-fit: cover;" class="me-2">
+                }
+            </div>
+        }
+    </div>
+
+
+    <!-- Product Specifications -->
+    <div class="mb-3">
+        <label class="form-label">Product Specifications:</label>
+        <div id="specificationsContainer">
+            @if (ViewBag.Specifications != null)
+            {
+                var specIndex = 0;
+                foreach (var spec in ViewBag.Specifications)
+                {
+                    <div class="input-group mb-2">
+                        <input type="text" name="Specifications[@specIndex].NameSpe" class="form-control" placeholder="Specification Name" value="@spec.NameSpe" required>
+                        <input type="text" name="Specifications[@specIndex].DesSpe" class="form-control" placeholder="Specification Description" value="@spec.DesSpe">
+                        <button type="button" class="btn btn-danger remove-item">Remove</button>
+                    </div>
+                    specIndex++;
+                }
+            }
+        </div>
+        <button type="button" id="addSpecBtn" class="btn btn-success mt-2">Add Specification</button>
+    </div>
+
+    <!-- Submit -->
+    <div class="d-flex align-items-center gap-2 mt-3">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <a href="/Admin/Product/ShowListProduct" class="btn btn-secondary">Back to list</a>
+    </div>
+</form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var specIndex = @((ViewBag.Specifications != null) ? ViewBag.Specifications.Count : 0);
+
+        // Xử lý sự kiện Add Specification
+        document.getElementById("addSpecBtn").addEventListener("click", function () {
+            var specificationsContainer = document.getElementById("specificationsContainer");
+            if (specificationsContainer) {
+                var div = document.createElement("div");
+                div.classList.add("input-group", "mb-2");
+                div.innerHTML = `
+                    <input type="text" name="Specifications[${specIndex}].NameSpe" class="form-control" placeholder="Specification Name" required>
+                    <input type="text" name="Specifications[${specIndex}].DesSpe" class="form-control" placeholder="Specification Description">
+                    <button type="button" class="btn btn-danger remove-item">Remove</button>
+                `;
+                specificationsContainer.appendChild(div);
+                specIndex++;
+            } else {
+                console.error("specificationsContainer không tồn tại trong DOM.");
+            }
+        });
+
+        // Xử lý sự kiện Remove Specification
+        document.body.addEventListener("click", function (event) {
+            if (event.target.classList.contains("remove-item")) {
+                event.target.parentElement.remove();
+            }
+        });
+    });
+
+    CKEDITOR.replace('Description');
+
+</script>
+
